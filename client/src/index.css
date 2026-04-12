@@ -1,0 +1,61 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --sans: Inter, system-ui, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* Neutral palette */
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Semantic */
+  --bg:         #ffffff;
+  --bg-subtle:  var(--gray-50);
+  --border:     var(--gray-200);
+  --border-md:  var(--gray-300);
+  --text:       var(--gray-500);
+  --text-h:     var(--gray-900);
+  --text-sub:   var(--gray-400);
+
+  /* Brand */
+  --brand:      #4f46e5;
+  --brand-hover:#4338ca;
+  --brand-light:rgba(79, 70, 229, 0.08);
+  --brand-ring: rgba(79, 70, 229, 0.3);
+
+  /* Status colours */
+  --green-bg: #f0fdf4; --green-text: #15803d; --green-border: #bbf7d0;
+  --yellow-bg:#fefce8; --yellow-text:#a16207; --yellow-border:#fde68a;
+  --orange-bg:#fff7ed; --orange-text:#c2410c; --orange-border:#fed7aa;
+  --red-bg:   #fef2f2; --red-text:  #b91c1c; --red-border:   #fecaca;
+
+  font: 15px/1.6 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+}
+
+body { margin: 0; }
+p    { margin: 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; color: var(--text-h); line-height: 1.3; }
+
+code {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-h);
+}
+
+#root { min-height: 100svh; }
