@@ -4,6 +4,35 @@ A system that gathers and structures information about companies to risk-assess 
 
 ---
 
+## Requirements Coverage
+
+A quick map of how this implementation addresses each evaluation criterion.
+
+### 1. Correctness — Core functionality
+| Requirement | Implementation |
+|---|---|
+| Accept company name or registration number | Search endpoint accepts either or both; validation enforced via Zod |
+| Gather data from multiple sources | Three parallel assessors: company details, sanctions, web search |
+| Use an LLM to structure data in a consistent JSON schema | LLM prompt enforces a strict output schema; validated with Zod |
+| Minimal UI for querying and surfacing results | React client with search, progressive progress tracker, and full profile view |
+
+### 2. Non-functional concerns
+| Requirement | Implementation |
+|---|---|
+| **Latency** < 10s | Parallel data sources + single LLM call |
+| **Responsiveness** — progressive updates | SSE streams a per-source status event as each assessor completes; progress tracker updates in real time |
+| **Reproducibility** | `temperature: 0` on the LLM call ensures deterministic outputs for the same input |
+| **Evaluation** — measure of result quality | `confidence.overall` (0–100) scored by the LLM against a defined scale; `completenessPercent` is the proportion of data sources that returned successfully (calculated in `profileBuilder`, not by the LLM) |
+| **Extensibility** — plug in additional sources | Adding a source means implementing `fetch()` and `map()` on the `DataSource` base class and appending to the `sources` array in the controller — no other changes |
+
+### 3. Stretch goals
+| Goal | Status |
+|---|---|
+| Multi-jurisdiction support | Partial — architecture supports it mock data covers GB only |
+| **Agent guardrails** | `temperature: 0` for reproducibility; Zod schema validation rejects malformed outputs; `response_format: json_object` prevents freeform prose; profile is still returned if LLM fails (graceful degradation) |
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -41,6 +70,15 @@ npm run dev:client
 ```
 
 The client runs on `http://localhost:5173` and proxies API requests to the server on port `3000`.
+
+### Running tests
+
+```bash
+cd apps/server
+npm test
+```
+
+Tests cover assessors, controllers, and services. The focus is on business logic correctness — field normalisation, validation rules, sanctions hit detection, and profile assembly — rather than aiming for 100% line coverage.
 
 ---
 
@@ -109,6 +147,10 @@ DataSource
 
 ### LLM integration
 
+**Model:** `anthropic/claude-3.5-haiku` via OpenRouter  
+**Temperature:** `0` — deterministic output, ensures reproducibility across repeated runs  
+**Response format:** `json_object` — prevents freeform prose; model must return valid JSON
+
 Raw data from all sources is passed to the LLM in a single prompt. The LLM is responsible for:
 
 - Identifying risk indicators from the combined evidence
@@ -120,12 +162,9 @@ The prompt provides the model with:
 - A defined KYB analyst role
 - The raw source data from each assessor
 - An enumerated list of risk flags with severity guidance
-- A confidence scoring scale with clear thresholds
+- A confidence scoring scale with clear thresholds (90–100 = clear evidence, below 50 = insufficient)
 - A strict JSON schema the response must conform to
 
-The output is validated against a Zod schema. If validation fails, the error details are logged.
-
----
 
 ## Design Decisions & Trade-offs
 
@@ -133,7 +172,7 @@ The output is validated against a Zod schema. If validation fails, the error det
 
 All data sources use mock providers with realistic data covering the key risk scenarios. This keeps the focus on data processing and LLM integration rather than API integration work.
 
-In production, each mock provider would be replaced with a real integration — Companies House API, ComplyAdvantage, Brave Search ext — without changing any other code.
+In production, each mock provider would be replaced with a real integration — Companies House API, ComplyAdvantage, Brave Search — without changing any other code.
 
 ### SSE over WebSockets
 
@@ -209,7 +248,7 @@ If the LLM response fails schema validation, the system currently logs the error
 Web search results are injected into the LLM prompt verbatim. A malicious company description could attempt to override the prompt instructions. In production, source content should be sanitised or wrapped in a way that separates it clearly from instructions.
 
 ### Prompt versioning
-There is currently no versioning or tracking of prompt changes. I don’t have hands-on experience in this area yet, so I would need some time to research and apply best practices. At a minimum, a production system should version prompts and evaluate outputs before deployment.
+There is currently no versioning or tracking of prompt changes. I don't have hands-on experience in this area yet, so I would need some time to research and apply best practices. At a minimum, a production system should version prompts and evaluate outputs before deployment.
 
 ### Risk level explainer
 The risk badge shows `low / medium / high / critical / unknown` with no explanation of what each level means. A `ⓘ` icon beside the badge that triggers a tooltip or popover listing all levels with a one-line description each would give users — especially non-technical compliance reviewers — immediate context without cluttering the UI for users already familiar with the scale.
@@ -287,3 +326,9 @@ The endpoint streams SSE events as each source completes, then delivers the fina
   }
 }
 ```
+
+---
+
+## Test Coverage
+
+![Test Coverage](docs/test_coverage.png)
