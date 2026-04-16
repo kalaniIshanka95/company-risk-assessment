@@ -266,6 +266,15 @@ For 1,000 queries/minute:
 
 ---
 
+## Mock Companies for Testing
+
+| Company | Number | Jurisdiction | Expected Risk |
+|---|---|---|---|
+| `MARKS AND SPENCER PLC` | `00445790` | `GB` | Low |
+| `SANCTIONED ENTITY LTD` | `11111111` | `GB` | Critical |
+
+---
+
 ## Example Inputs & Outputs
 
 ### Step 1 — Search endpoint
